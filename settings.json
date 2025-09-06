@@ -1,0 +1,10 @@
+{
+  "prefix": "/data/data/com.termux/files/usr",
+  "botName": "Abdullah-XMD",
+  "owners": [
+    "YOUR_NUMBER"
+  ],
+  "menuStyle": 1,
+  "publicMode": true,
+  "disabledPlugins": []
+}

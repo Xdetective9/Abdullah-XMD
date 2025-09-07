@@ -1,21 +1,35 @@
-/**
- * Plugin: downloader/downloader-extra-055
- * Purpose: Auto-generated plugin #55 for category downloader
- * Generated: 2025-09-06T13:04:00.792Z
- *
- * Note: Replace the demo implementation with real logic if needed.
- */
-module.exports = async (sock, m, args, ctx) => {
-  const from = m.key ? (m.key.remoteJid || m.key.participant || '') : '';
-  try {
-      const API_KEY = process.env.YOUTUBE_API_KEY || "_api_paste_here_";
-      if (!API_KEY || API_KEY === "_api_paste_here_") {
-        return sock.sendMessage(from, { text: "⚠️ Plugin *downloader/downloader-extra-055* requires API key: YOUTUBE_API_KEY.\nAdd it to your .env (or leave placeholder and update later)." });
-      }
-      // Demo behaviour: tell user API is set (actual implementation should call the API)
-      await sock.sendMessage(from, { text: "✅ downloader/downloader-extra-055 executed. (API key present - implement actual API call here)" });
-  } catch (e) {
-    console.error("[plugin error] downloader/downloader-extra-055", e);
-    try { await sock.sendMessage(from, { text: "❌ Error in downloader/downloader-extra-055: " + (e.message || e) }); } catch {}
-  }
+const axios = require("axios");
+const { getWatermark } = require("../../lib/utils");
+
+module.exports = {
+  name: "reddit",
+  alias: ["rd", "rdddl"],
+  desc: "Download Reddit posts",
+  category: "downloader",
+  usage: "reddit <url>",
+  react: "👽",
+  start: async (m, { text, sendFile }) => {
+    if (!text) return m.reply("⚠️ Usage: reddit <url>");
+
+    try {
+      const url = `https://reddit-video-and-image-downloader.p.rapidapi.com/?url=${encodeURIComponent(text)}`;
+      const res = await axios.get(url, {
+        headers: {
+          "x-rapidapi-host": "reddit-video-and-image-downloader.p.rapidapi.com",
+          "x-rapidapi-key": "dd8702f5famshafac77b8852c11fp172040jsnca0f75c33826"
+        }
+      });
+
+      const media = res.data?.media?.[0]?.url;
+      if (!media) return m.reply("❌ Couldn't fetch Reddit media.");
+
+      const wm = getWatermark();
+      await sendFile(m.from, media, "reddit.mp4", m, {
+        caption: wm || "📥 Reddit Download",
+      });
+    } catch (e) {
+      m.reply("🚫 Error: " + e.message);
+    }
+  },
 };
+

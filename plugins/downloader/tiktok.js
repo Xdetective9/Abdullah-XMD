@@ -1,21 +1,35 @@
-/**
- * Plugin: downloader/tiktok
- * Purpose: Special plugin tiktok (downloader) — demo (implement API calls inside).
- * Generated: 2025-09-06T13:04:00.765Z
- *
- * Note: Replace the demo implementation with real logic if needed.
- */
-module.exports = async (sock, m, args, ctx) => {
-  const from = m.key ? (m.key.remoteJid || m.key.participant || '') : '';
-  try {
-      // Demo behaviour: basic echo / demo action
-      const textArg = args && args.length ? args.join(' ') : null;
-      if (!textArg) {
-        return sock.sendMessage(from, { text: "Usage: /data/data/com.termux/files/usrtiktok <text>" });
-      }
-      await sock.sendMessage(from, { text: "🔹 downloader/tiktok response:\n" + textArg });
-  } catch (e) {
-    console.error("[plugin error] downloader/tiktok", e);
-    try { await sock.sendMessage(from, { text: "❌ Error in downloader/tiktok: " + (e.message || e) }); } catch {}
-  }
+const axios = require("axios");
+const { getWatermark } = require("../../lib/utils");
+
+module.exports = {
+  name: "tiktok",
+  alias: ["tt", "ttdl"],
+  desc: "Download TikTok videos",
+  category: "downloader",
+  usage: "tiktok <url>",
+  react: "🎵",
+  start: async (m, { text, sendFile }) => {
+    if (!text) return m.reply("⚠️ Usage: tiktok <url>");
+
+    try {
+      const url = `https://tiktok-video-feature-summary.p.rapidapi.com/?url=${encodeURIComponent(text)}&hd=1`;
+      const res = await axios.get(url, {
+        headers: {
+          "x-rapidapi-host": "tiktok-video-feature-summary.p.rapidapi.com",
+          "x-rapidapi-key": "dd8702f5famshafac77b8852c11fp172040jsnca0f75c33826"
+        },
+      });
+
+      const video = res.data?.video_url;
+      if (!video) return m.reply("❌ Couldn't fetch TikTok video.");
+
+      const wm = getWatermark();
+      await sendFile(m.from, video, "tiktok.mp4", m, {
+        caption: wm || "📥 TikTok Download",
+      });
+    } catch (e) {
+      m.reply("🚫 Error: " + e.message);
+    }
+  },
 };
+                     
